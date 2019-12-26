@@ -1,0 +1,43 @@
+---
+# tasks file for roles/install-k3s
+- name: install master
+  shell: curl -sfL https://get.k3s.io | sh -
+  args:
+    creates: /var/lib/rancher/k3s/server/node-token
+  when: ansible_host in groups['master']
+
+- name: get node token
+  shell: cat /var/lib/rancher/k3s/server/node-token
+  register: node_token
+  delegate_to: "{{ groups['master'][0] }}"
+
+- name: install nodes
+  shell: curl -sfL https://get.k3s.io | \
+    K3S_URL=https://{{ hostvars[groups['master'][0]].ansible_default_ipv4.address }}:6443 \
+    K3S_TOKEN={{ node_token.stdout }} \
+    sh -
+  args:
+    creates: /var/lib/rancher/k3s
+  when: ansible_host in groups['workers']
+
+- name: create k3s.yaml.orig
+  copy:
+    remote_src: yes
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /etc/rancher/k3s/k3s.yaml.orig
+  when: ansible_host == groups['master'][0]
+
+- name: modify k3s.yaml with master hostname
+  replace:
+    path: /etc/rancher/k3s/k3s.yaml
+    regexp: "server: https://127.0.0.1:6443"
+    replace: "server: https://{{ hostvars[groups['master'][0]].ansible_hostname }}:6443"
+  when: ansible_host == groups['master'][0]
+
+- name: get kube config
+  fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: k3s.config
+    mode: 0600
+    flat: yes
+  when: ansible_host == groups['master'][0]

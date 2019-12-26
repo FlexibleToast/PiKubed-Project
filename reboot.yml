@@ -1,0 +1,9 @@
+---
+- name: Reboot the cluster in series
+  hosts: pikubed_cluster
+  become: true
+  serial: 1
+  gather_facts: no
+  tasks:
+  - name: Reboot node
+    reboot:

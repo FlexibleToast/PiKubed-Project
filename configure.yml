@@ -1,0 +1,31 @@
+---
+- name: Configure the PiKubed cluster
+  hosts: pikubed_cluster
+  become: true
+  pre_tasks:
+
+  - name: Update packages
+    apt:
+      name: '*'
+      state: latest
+      update_cache: yes
+      force_apt_get: yes
+
+  - name: Create /etc/hosts
+    template:
+      src: templates/hosts.j2
+      dest: /etc/hosts
+      owner: root
+      group: root
+
+  - name: Move /tmp to tmpfs
+    mount:
+      path: /tmp
+      src: tmpfs
+      fstype: tmpfs
+      opts: rw,nodev,nosuid
+      state: mounted
+
+  roles:
+  - role: log2ram
+  - role: install-k3s

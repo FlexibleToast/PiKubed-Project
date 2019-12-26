@@ -1,0 +1,30 @@
+---
+# tasks file for roles/log2ram
+- name: Add apt key
+  apt_key:
+    url: https://azlux.fr/repo.gpg.key
+    state: present
+
+- name: Add repository
+  apt_repository:
+    repo: deb http://packages.azlux.fr/debian/ buster main
+    state: present
+
+- name: Install log2ram
+  apt:
+    name: log2ram
+    state: present
+    update_cache: yes
+
+- name: Start log2ram service
+  service:
+    name: log2ram
+    state: started
+    enabled: yes
+
+- name: Set size of log2ram folder in RAM
+  lineinfile:
+    path: /etc/log2ram.conf
+    regexp: ^SIZE=
+    line:   SIZE={{ log_folder_size }}M
+  notify: restart log2ram

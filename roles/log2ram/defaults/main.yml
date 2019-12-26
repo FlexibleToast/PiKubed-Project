@@ -1,0 +1,3 @@
+---
+# defaults file for roles/log2ram
+log_folder_size: 128
