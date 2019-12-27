@@ -1,3 +1,4 @@
 ansible.cfg
 inventory
+k3s.yaml
 *.swp

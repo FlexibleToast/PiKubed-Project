@@ -1,0 +1,43 @@
+---
+# tasks file for roles/keepalived-vip
+- name: install keepalived on rpm based machines
+  yum:
+    name: keepalived
+    state: present
+  when: ansible_distribution_file_variety == "RedHat" and vip_priority is defined
+
+- name: install keepalived on deb based machines
+  apt:
+    name: keepalived
+    state: present
+  when: ansible_distribution_file_variety == "Debian" and vip_priority is defined
+
+- name: check if backup of original keepalived.conf exists
+  stat:
+    path: /etc/keepalived/keepalived.conf.orig
+  register: file_stat
+
+- name: keep copy of original keepalived.conf
+  copy:
+    remote_src: yes
+    src: /etc/keepalived/keepalived.conf
+    dest: /etc/keepalived/keepalived.conf.orig
+  when: not file_stat.stat.exists and vip_priority is defined
+  ignore_errors: yes
+
+- name: apply keepalived.conf
+  template:
+    src: templates/keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart keepalived
+  when: vip_priority is defined
+
+- name: start keepalived
+  service:
+    name: keepalived
+    enabled: true
+    state: started
+  when: vip_priority is defined
