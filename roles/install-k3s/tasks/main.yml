@@ -20,19 +20,13 @@
     creates: /var/lib/rancher/k3s
   when: ansible_host in groups['workers']
 
-- name: check if k3s.yaml already backed up
-  stat:
-    path: /etc/rancher/k3s/k3s.yaml.orig
-  register: file_stat
-  when: ansible_host == groups['master'][0]
-
 - name: create k3s.yaml.orig
   copy:
     remote_src: yes
     src: /etc/rancher/k3s/k3s.yaml
     dest: /etc/rancher/k3s/k3s.yaml.orig
-    creates: /etc/rancher/k3s/k3s.yaml.orig
-  when: ansible_host == groups['master'][0] and not file_stat.stat.exists
+    force: no
+  when: ansible_host == groups['master'][0]
 
 - name: modify k3s.yaml with master hostname
   replace:

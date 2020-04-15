@@ -8,7 +8,7 @@ This is the working directory for all the ansible and scripts I use for my PiKub
 
 All playbooks expect an inventory file that has a master and workers group. If you want a virtual IP for high availability access you can assign each host a `vip_priority` and which will be used when the configure.yml playbook is run. For example my inventory file looks like:
 
-```tsx
+```textfile
 [pikubed_cluster:children]
 master
 workers
@@ -18,8 +18,8 @@ pikubed0  vip_priority=110
 
 [workers]
 pikubed1  vip_priority=109
-pikubed2  vip_priority=108
-pikubed3  vip_priority=107
+pikubed2
+pikubed3
 ```
 
 #### configure.yml

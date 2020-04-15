@@ -2,8 +2,8 @@
 - name: Configure the PiKubed cluster
   hosts: pikubed_cluster
   become: true
+  vars_files: vars.yml
   pre_tasks:
-
   - name: Update packages
     apt:
       name: '*'
@@ -31,5 +31,5 @@
   - role: install-k3s
   - role: keepalived-vip
     vars:
-    - vip_pass: secretpassword
-    - vip_ip: 192.168.0.105
+    - vip_pass: '{{ vip.pass }}'
+    - vip_ip: '{{ vip.ip }}'

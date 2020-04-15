@@ -1,0 +1,92 @@
+---
+- name: Create logical and GlusterFS volumes for persistent storage
+  hosts: pikubed_cluster
+  become: true
+  vars_files: vars.yml
+  tasks:
+
+  - name: Install prereqs
+    apt:
+      name: '{{ item }}'
+      state: present
+    loop:
+    - thin-provisioning-tools
+    - xfsprogs
+    - glusterfs-server
+    - glusterfs-client
+  
+  - name: Create volume group
+    lvg:
+      vg: '{{ vg.name }}'
+      pvs: '{{ vg.drives }}'
+
+  - name: Create thinpool
+    lvol:
+      vg: '{{ vg.name }}'
+      thinpool: '{{ tpool.name }}'
+      size: '{{ tpool.size }}'
+
+  - name: Create logical volumes
+    lvol:
+      vg: '{{ vg.name }}'
+      thinpool: '{{ tpool.name }}'
+      lv: '{{ item.name }}'
+      size: '{{ item.size }}'
+    loop: '{{ lvs }}'
+
+  - name: Make filesystems
+    filesystem:
+      fstype: xfs
+      dev: /dev/{{ vg.name }}/{{ item.name }}
+    loop: '{{ lvs }}'
+
+  - name: Make brick mountpoints
+    file:
+      path: /bricks/{{ item.name }}
+      state: directory
+      owner: '{{ docker.user }}'
+      group: '{{ docker.group }}'
+    loop: '{{ lvs }}'
+
+  - name: Mount bricks
+    mount:
+      path: /bricks/{{ item.name }}
+      src: /dev/{{ vg.name }}/{{ item.name }}
+      fstype: xfs
+      state: mounted
+    loop: '{{ lvs }}'
+
+  - name: Start GlusterFS daemon
+    service:
+      name: glusterd
+      state: started
+      enabled: yes
+
+  - name: Peer probe GlusterFS
+    command: gluster peer probe {{ item }}
+    run_once: true
+    loop: '{{ groups.pikubed_cluster }}'
+    register: gluster_peer_probe
+    changed_when: "'already in peer list' not in gluster_peer_probe.stdout"
+    
+  - name: Create GlusterFS volumes
+    gluster_volume:
+      state: present
+      name: '{{ item.name }}'
+      bricks: /bricks/{{ item.name }}
+      replicas: 2
+      cluster: '{{ groups.pikubed_cluster }}'
+      force: yes
+      start_on_create: yes
+    loop: '{{ lvs }}'
+    run_once: yes
+
+  - name: Mount bricks
+    mount:
+      path: /docker/{{ item.name }}
+      src: "{{ groups.pikubed_cluster[0] }}:/{{ item.name }}"
+      fstype: glusterfs
+      opts: "defaults,backupvolfile-server={{ groups.pikubed_cluster[2] }}"
+      state: mounted
+    loop: '{{ lvs }}'
+

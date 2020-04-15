@@ -1,6 +1,0 @@
----
-- name: Upgrade the K3S cluster
-  hosts: pikubed_cluster
-  become: yes
-  roles:
-  - role: upgrade-k3s

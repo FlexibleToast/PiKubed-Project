@@ -12,9 +12,9 @@
     state: present
   when: ansible_distribution_file_variety == "Debian" and vip_priority is defined
 
-- name: check if backup of original keepalived.conf exists
+- name: check if keepalived.conf exists
   stat:
-    path: /etc/keepalived/keepalived.conf.orig
+    path: /etc/keepalived/keepalived.conf
   register: file_stat
 
 - name: keep copy of original keepalived.conf
@@ -22,6 +22,7 @@
     remote_src: yes
     src: /etc/keepalived/keepalived.conf
     dest: /etc/keepalived/keepalived.conf.orig
+    force: no
   when: not file_stat.stat.exists and vip_priority is defined
   ignore_errors: yes
 
