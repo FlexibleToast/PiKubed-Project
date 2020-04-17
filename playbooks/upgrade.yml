@@ -6,7 +6,7 @@
   - role: upgrade-k3s
   tasks:
   - name: Update packages
-    apt:
+    yum:
       name: '*'
       state: latest
       update_cache: yes

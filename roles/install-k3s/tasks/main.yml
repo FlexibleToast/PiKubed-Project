@@ -27,8 +27,8 @@
     K3S_TOKEN={{ node_token.stdout }} \
     sh -
   args:
-    creates: /var/lib/rancher/k3s
-  when: ansible_host in groups['workers']
+    creates: /var/lib/rancher/k3s/agent/client-ca.crt
+  when: ansible_host in groups['workers'] and readd not defined
 
 - name: create k3s.yaml.orig
   copy:

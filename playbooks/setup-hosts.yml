@@ -10,9 +10,11 @@
       name: '*'
       state: latest
       update_cache: yes
+    register: updated
 
   - name: Reboot all hosts
     reboot:
+    when: updated.changed
 
   - name: Expand root filesystem
     command: /usr/bin/rootfs-expand
