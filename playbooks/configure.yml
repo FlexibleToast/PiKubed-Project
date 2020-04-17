@@ -5,18 +5,17 @@
   vars_files: vars.yml
   pre_tasks:
   - name: Update packages
-    apt:
+    yum:
       name: '*'
       state: latest
       update_cache: yes
-      force_apt_get: yes
 
-  - name: Create /etc/hosts
-    template:
-      src: templates/hosts.j2
-      dest: /etc/hosts
-      owner: root
-      group: root
+  #- name: Create /etc/hosts
+    #template:
+      #src: templates/hosts.j2
+      #dest: /etc/hosts
+      #owner: root
+      #group: root
 
   - name: Move /tmp to tmpfs
     mount:

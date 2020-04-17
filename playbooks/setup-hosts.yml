@@ -1,0 +1,40 @@
+---
+- name: Configure all freshly installed hosts
+  hosts: pikubed_cluster
+  remote_user: root
+  vars_files: vars.yml
+  tasks:
+
+  - name: Update all hosts
+    yum:
+      name: '*'
+      state: latest
+      update_cache: yes
+
+  - name: Reboot all hosts
+    reboot:
+
+  - name: Expand root filesystem
+    command: /usr/bin/rootfs-expand
+    ignore_errors: yes
+
+  - name: Change root password
+    user:
+      name: root
+      password: "{{ root_pass | password_hash('sha512') }}"
+
+  - name: Create ansible user
+    user:
+      name: '{{ ansible.username }}'
+      password: "{{ ansible.password | password_hash('sha512') }}"
+      group: wheel
+      append: yes
+
+  - name: Copy ansible user ssh key
+    authorized_key:
+      user: '{{ ansible.username }}'
+      key: '{{ ansible.key }}'
+
+  - name: Change hostname
+    hostname:
+      name: '{{ inventory_hostname }}'

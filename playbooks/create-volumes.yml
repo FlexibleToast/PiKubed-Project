@@ -6,10 +6,11 @@
   tasks:
 
   - name: Install prereqs
-    apt:
+    yum:
       name: '{{ item }}'
       state: present
     loop:
+    - lvm2
     - thin-provisioning-tools
     - xfsprogs
     - glusterfs-server

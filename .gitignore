@@ -4,4 +4,4 @@ rook-operator.yaml
 rook-common.yaml
 k3s.yaml
 *.swp
-vars.yml
+/vars.yml

@@ -1,26 +1,64 @@
 ---
 # tasks file for roles/log2ram
-- name: Add apt key
-  apt_key:
-    url: https://azlux.fr/repo.gpg.key
-    state: present
+- name: Check if already installed
+  stat:
+    path: /etc/log2ram.conf
+  register: config_file
 
-- name: Add repository
-  apt_repository:
-    repo: deb http://packages.azlux.fr/debian/ buster main
-    state: present
+- block:
+  - name: Add apt key
+    apt_key:
+      url: https://azlux.fr/repo.gpg.key
+      state: present
 
-- name: Install log2ram
-  apt:
-    name: log2ram
-    state: present
-    update_cache: yes
+  - name: Add repository
+    apt_repository:
+      repo: deb http://packages.azlux.fr/debian/ buster main
+      state: present
 
-- name: Start log2ram service
-  service:
-    name: log2ram
-    state: started
-    enabled: yes
+  - name: Install log2ram
+    apt:
+      name: log2ram
+      state: present
+      update_cache: yes
+
+  - name: Start log2ram service
+    service:
+      name: log2ram
+      state: started
+      enabled: yes
+
+  - name: Reboot node to activate log2ram
+    reboot:
+
+  when: not config_file.stat.exists and ansible_distribution_file_variety == "Debian"
+
+- block:
+  - name: Get source
+    get_url:
+      url: https://github.com/azlux/log2ram/archive/master.tar.gz
+      dest: /tmp/log2ram.tar.gz
+
+  - name: Untar source
+    unarchive: 
+      src: /tmp/log2ram.tar.gz
+      dest: /tmp
+      remote_src: yes
+
+  - name: Make install.sh executable
+    file:
+      path: /tmp/log2ram-master/install.sh
+      mode: '0755'
+
+  - name: Run install.sh
+    command: 
+      cmd: ./install.sh
+      chdir: /tmp/log2ram-master
+
+  - name: Reboot node to activate log2ram
+    reboot:
+
+  when: not config_file.stat.exists
 
 - name: Set size of log2ram folder in RAM
   lineinfile:
