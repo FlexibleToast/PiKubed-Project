@@ -13,6 +13,15 @@
     - lvm2
     - thin-provisioning-tools
     - xfsprogs
+    - centos-release-gluster
+    - epel-release
+
+  - name: Install Gluster
+    yum:
+      name: '{{ item }}'
+      state: present
+      update_cache: yes
+    loop:
     - glusterfs-server
     - glusterfs-client
   
