@@ -1,0 +1,31 @@
+---
+### Setup Host Variables ###
+root_pass: 
+
+ansible:
+  username: 
+  password: 
+  key: 
+
+### K3S installation variables ###
+vip:
+  ip: 
+  pass: 
+log2ram:
+  folder_size:
+
+### Storage configuration ###
+vg:
+  name: 
+  drives: 
+
+tpool:
+  name: 
+  size: 
+
+lvs:
+- name: 
+  size: 
+
+### List volumes to remove ###
+lvs_remove:

@@ -1,5 +1,18 @@
 ---
 # tasks file for roles/install-k3s
+- name: open firewalld ports for k3s
+  firewalld:
+    port: '{{ item }}'
+    state: enabled
+    permanent: yes
+    immediate: yes
+  loop:
+  - 80/tcp
+  - 443/tcp
+  - 6443/tcp  # Kubernetes API
+  - 8472/udp  # Required only for Flannel VXLAN
+  - 10250/tcp # kubelet
+  
 - name: install k3s SELinux support
   yum:
     name: '{{ item }}'
@@ -9,6 +22,12 @@
   - selinux-policy-base
   - https://rpm.rancher.io/k3s-selinux-0.1.1-rc1.el7.noarch.rpm
   when: ansible_distribution_file_variety == "RedHat"
+
+- name: create cgroups
+  shell: grep "cgroup_memory=1 cgroup_enable=memory" /boot/cmdline.txt || sed -i 's/\(.*\)/\1 cgroup\_memory\=1\ cgroup\_enable\=memory/g' /boot/cmdline.txt
+
+- name: reboot to apply cgroups
+  reboot:
 
 - name: install master
   shell: curl -sfL https://get.k3s.io | sh -
@@ -28,7 +47,7 @@
     sh -
   args:
     creates: /var/lib/rancher/k3s/agent/client-ca.crt
-  when: ansible_host in groups['workers'] and readd not defined
+  when: ansible_host in groups['workers']
 
 - name: create k3s.yaml.orig
   copy:

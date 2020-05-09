@@ -64,5 +64,5 @@
   lineinfile:
     path: /etc/log2ram.conf
     regexp: ^SIZE=
-    line:   SIZE={{ log_folder_size }}M
+    line:   SIZE={{ log_folder_size }}
   notify: restart log2ram

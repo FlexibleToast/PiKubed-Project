@@ -4,18 +4,19 @@
   become: true
   vars_files: vars.yml
   pre_tasks:
+
   - name: Update packages
     yum:
       name: '*'
       state: latest
       update_cache: yes
 
-  #- name: Create /etc/hosts
-    #template:
-      #src: templates/hosts.j2
-      #dest: /etc/hosts
-      #owner: root
-      #group: root
+  - name: Create /etc/hosts
+    template:
+      src: templates/hosts.j2
+      dest: /etc/hosts
+      owner: root
+      group: root
 
   - name: Move /tmp to tmpfs
     mount:
@@ -27,6 +28,8 @@
 
   roles:
   - role: log2ram
+    vars:
+    - log_folder_size: '{{ log2ram.folder_size }}'
   - role: install-k3s
   - role: keepalived-vip
     vars:
