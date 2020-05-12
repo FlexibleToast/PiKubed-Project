@@ -1,31 +1,24 @@
 ---
-- name: Upgrade the K3S cluster
+- name: Upgrade K3S
   hosts: pikubed_cluster
   become: yes
   roles:
   - role: upgrade-k3s
-  tasks:
-  - name: Update packages
-    yum:
-      name: '*'
-      state: latest
-      update_cache: yes
-    notify: schedule reboot
-  handlers:
-  - name: schedule reboot
-    command: touch /tmp/reboot_flag
 
-- name: Reboot nodes
+- name: Update and reboot nodes one at a time
   hosts: pikubed_cluster
   become: yes
   serial: 1
   gather_facts: no
   tasks:
-  - name: Delete reboot flag
-    file:
-      path: /tmp/reboot_flag
-      state: absent
-    notify: reboot node
-  handlers:
-  - name: reboot node
+
+  - name: Update node
+    yum:
+      name: '*'
+      state: latest
+      update_cache: yes
+    register: updated
+
+  - name: Reboot node
     reboot:
+    when: updated.changed

@@ -6,7 +6,7 @@ This is the working directory for all the ansible and scripts I use for my PiKub
 
 ### Created So Far
 
-All playbooks expect an inventory file that has a master and workers group. If you want a virtual IP for high availability access you can assign each host a `vip_priority` and which will be used when the configure.yml playbook is run. For example my inventory file looks like:
+All playbooks expect an inventory file that has a master and workers group. If you want a virtual IP for high availability access you can assign each host a `vip_priority` which will be used when the configure.yml playbook is run. For example my inventory file looks like:
 
 ```textfile
 [pikubed_cluster:children]
@@ -14,13 +14,32 @@ master
 workers
 
 [master]
-pikubed0  vip_priority=110
+pikubed-m0  vip_priority=110
 
 [workers]
-pikubed1  vip_priority=109
-pikubed2
-pikubed3
+pikubed-0  vip_priority=109
+pikubed-1
+pikubed-2
 ```
+#### setup-hosts.yml
+
+I'm using the CentOS 7 image available for the Raspberry Pi 4. With this image there is a default root user and ssh access. Therefore after flashing the SD cards with the image this playbook is run to setup all hosts to be prepared for the rest of the procedure. The following is performed:
+
+- Update all packages
+
+- If packages were updated the host is rebooted
+
+- Expand the root filesystem to the entire SD card
+
+- Change the root user password
+
+- Add an ssh key for the root user if specified
+
+- Create a user for Ansible
+
+- Copy Ansible user's ssh key if specified
+
+- Change the hostnames to match the inventory
 
 #### configure.yml
 
@@ -33,7 +52,7 @@ This playbook handles the initial setup of the Raspberry Pis. The following is p
 - Moves `/tmp` to `tmpfs` to minimize SD card writes
 
 - Installs log2ram to minimize SD card writes
-  
+
   - You can use `log_folder_size` variable to adjust size in mb the size of the log folder in ram
 
 - Installs k3s on master
