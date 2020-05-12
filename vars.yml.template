@@ -1,11 +1,13 @@
 ---
 ### Setup Host Variables ###
-root_pass: 
+root: 
+  pass:
+  authorized_key:
 
 ansible:
   username: 
   password: 
-  key: 
+  authorized_key: 
 
 ### K3S installation variables ###
 vip:

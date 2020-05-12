@@ -23,7 +23,13 @@
   - name: Change root password
     user:
       name: root
-      password: "{{ root_pass | password_hash('sha512') }}"
+      password: "{{ root.pass | password_hash('sha512') }}"
+
+  - name: Copy root user ssh key
+    authorized_key:
+      user: root
+      key: '{{ root.authorized_key }}'
+    when: root.authorized_key is defined
 
   - name: Create ansible user
     user:
@@ -35,7 +41,8 @@
   - name: Copy ansible user ssh key
     authorized_key:
       user: '{{ ansible.username }}'
-      key: '{{ ansible.key }}'
+      key: '{{ ansible.authorized_key }}'
+    when: ansible.authorized_key is defined
 
   - name: Change hostname
     hostname:
