@@ -35,16 +35,34 @@
 - name: reboot to apply cgroups
   reboot:
 
-- name: install master
-  shell: curl -sfL https://get.k3s.io | sh -
+- name: install initial master
+  shell: curl -sfL https://get.k3s.io | \
+    INSTALL_K3S_EXEC="server --cluster-init" sh -
   args:
     creates: /var/lib/rancher/k3s/server/node-token
-  when: ansible_host in groups['master']
+  when: ansible_host == groups['master'][0]
 
 - name: get node token
   shell: cat /var/lib/rancher/k3s/server/node-token
   register: node_token
   delegate_to: "{{ groups['master'][0] }}"
+
+- name: install masters
+  shell: curl -sfL https://get.k3s.io | \
+    K3S_URL=https://{{ hostvars[groups['master'][0]].ansible_default_ipv4.address }}:6443 \
+    K3S_TOKEN={{ node_token.stdout }} \
+    INSTALL_K3S_EXEC="server --server https://{{ hostvars[groups['master'][0]].ansible_default_ipv4.address }}:6443" \
+    sh -
+  args:
+    creates: /var/lib/rancher/k3s/agent/client-ca.crt
+  when: ansible_host in groups['master'] and ansible_host != groups['master'][0]
+  ignore_errors: yes
+
+- name: check k3s running on all masters
+  service:
+    name: k3s
+    state: started
+  when: ansible_host in groups['master']
 
 - name: install nodes
   shell: curl -sfL https://get.k3s.io | \

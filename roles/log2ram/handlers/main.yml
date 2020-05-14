@@ -1,6 +1,0 @@
----
-# handlers file for roles/log2ram
-- name: restart log2ram
-  service:
-    name: log2ram
-    state: restarted

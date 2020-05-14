@@ -30,7 +30,7 @@
   - role: log2ram
     vars:
     - log_folder_size: '{{ log2ram.folder_size }}'
-  - role: install-k3s
+  - role: install-k3s-ha
   - role: keepalived-vip
     vars:
     - vip_pass: '{{ vip.pass }}'
