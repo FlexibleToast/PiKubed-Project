@@ -1,0 +1,20 @@
+---
+- name: Update all packages
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+  register: updated
+
+- name: Reboot hosts if updated
+  reboot:
+  when: updated.changed
+
+- name: Expand CentOS root filesystem
+  command: /usr/bin/rootfs-expand
+  ignore_errors: yes
+
+- name: Uninstall firewalld
+  yum:
+    name: firewalld
+    state: absent

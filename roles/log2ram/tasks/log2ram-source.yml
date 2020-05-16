@@ -1,0 +1,19 @@
+---
+- name: Download and untar source
+  unarchive:
+    src: https://github.com/azlux/log2ram/archive/master.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: Make install.sh executable
+  file:
+    path: /tmp/log2ram-master/install.sh
+    mode: '0755'
+
+- name: Run install.sh
+  command:
+    cmd: ./install.sh
+    chdir: /tmp/log2ram-master
+
+- name: Reboot node to activate log2ram
+  reboot:

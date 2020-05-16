@@ -1,0 +1,25 @@
+---
+# tasks file for roles/k3s-firewalld
+- name: Install firewalld
+  yum:
+    name: firewalld
+    state: present
+
+- name: Start firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Open k3s ports
+  firewalld:
+    port: '{{ item }}'
+    state: enabled
+    permanent: yes
+    immediate: yes
+  loop:
+  - 80/tcp
+  - 443/tcp
+  - 6443/tcp  # Kubernetes API
+  - 8472/udp  # Required only for Flannel VXLAN
+  - 10250/tcp # kubelet

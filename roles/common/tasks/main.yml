@@ -1,0 +1,59 @@
+---
+- name: Include RPM updates
+  include_tasks: setup-rpm.yml
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: Include Debian updates
+  include_tasks: setup-deb.yml
+  when: ansible_distribution_file_variety == "Debian"
+
+- name: Change root password
+  user:
+    name: '{{ root.username }}'
+    password: "{{ root.pass | password_hash('sha512') }}"
+
+- name: Copy root user ssh key
+  authorized_key:
+    user: '{{ root.username }}'
+    key: "{{ lookup('file', '{{ root.keypath }}/{{ root.keyfile }}.pub') }}"
+  when: root.keyfile is defined
+
+- name: Create ansible user with wheel group
+  user:
+    name: '{{ ansible.username }}'
+    password: "{{ ansible.password | password_hash('sha512') }}"
+    group: wheel
+    append: yes
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: Create ansible user with sudo group
+  user:
+    name: '{{ ansible.username }}'
+    password: "{{ ansible.password | password_hash('sha512') }}"
+    group: sudo
+    append: yes
+  when: ansible_distribution_file_variety == "Debian"
+
+- name: Copy ansible user ssh key
+  authorized_key:
+    user: '{{ ansible.username }}'
+    key: "{{ lookup('file', '{{ ansible.keypath }}/{{ ansible.keyfile }}.pub') }}"
+
+- name: Change hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
+
+- name: Create /etc/hosts
+  template:
+    src: templates/hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+
+- name: Move /tmp to tmpfs
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: rw,nodev,nosuid
+    state: mounted

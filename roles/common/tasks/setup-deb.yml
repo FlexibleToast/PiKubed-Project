@@ -1,0 +1,17 @@
+---
+- name: Update all packages
+  apt:
+    force_apt_get: yes
+    name: '*'
+    state: latest
+    update_cache: yes
+    autoremove: yes
+  register: updated
+
+- name: Reboot hosts if updated
+  reboot:
+  when: updated.changed
+ 
+- name: Expand rootfs of Raspbian
+  command: raspi-config --expand-rootfs
+  ignore_errors: yes
