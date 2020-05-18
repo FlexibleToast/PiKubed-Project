@@ -2,17 +2,20 @@
 # tasks file for roles/upgrade-k3s
 - name: upgrade master
   shell: curl -sfL https://get.k3s.io | sh -
-  when: ansible_host in groups['master']
+  when: ansible_host == groups['masters'][0]
 
-- name: get node token
+- name: Get node token
   shell: cat /var/lib/rancher/k3s/server/node-token
-  register: node_token
-  delegate_to: "{{ groups['master'][0] }}"
+  register: token_file
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- set_fact:
+    node_token: '{{ token_file.stdout }}'
 
 - name: install nodes
   shell: curl -sfL https://get.k3s.io | \
     K3S_URL=https://{{ hostvars[groups['master'][0]].ansible_default_ipv4.address }}:6443 \
-    K3S_TOKEN={{ node_token.stdout }} \
+    K3S_TOKEN={{ node_token }} \
     sh -
   when: ansible_host in groups['workers']
 
@@ -20,4 +23,4 @@
   service:
     name: k3s
     state: restarted
-  when: ansible_host in groups['master']
+  when: ansible_host == groups['masters'][0]

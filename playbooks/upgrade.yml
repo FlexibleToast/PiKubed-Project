@@ -2,8 +2,10 @@
 - name: Upgrade K3S
   hosts: pikubed_cluster
   become: yes
+  gather_facts: no
+  vars_files: vars.yml
   roles:
-  - role: upgrade-k3s
+  - role: upgrade-k3s-ha
 
 - name: Update and reboot nodes one at a time
   hosts: pikubed_cluster
@@ -12,12 +14,22 @@
   gather_facts: no
   tasks:
 
-  - name: Update node
+  - name: Update node (yum)
     yum:
       name: '*'
       state: latest
       update_cache: yes
     register: updated
+    when: ansible_distribution_file_variety == "RedHat"
+
+  - name: Update node (apt)
+    apt:
+      name: '*'
+      state: latest
+      update_cache: yes
+      autoremove: yes
+    register: updated
+    when: ansible_distribution_file_variety == "Debian"
 
   - name: Reboot node
     reboot:

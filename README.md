@@ -45,9 +45,9 @@ This is the playbook used to install your Kubernetes cluster. Right now there ar
   - Install Galera (highly available MariaDB used for install-k3s-ha role creating an "external datastore")
   - Install k3s on all nodes
 
-#### upgrade.yml NOT UPDATED YET HA
+#### upgrade.yml
 
-This was created when I was still using the non high availability default installation of k3s. The playbook needs to be updated.
+Will update each node one by one restarting k3s on master nodes and rebooting if required
 
 #### reboot.yml
 

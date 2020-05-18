@@ -1,0 +1,34 @@
+---
+# tasks file for roles/upgrade-k3s-ha
+- name: Upgrade masters
+  shell: curl -sfL https://get.k3s.io | \
+    sh -s - server \
+    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@unix(/var/run/mysqld/mysqld.sock)/{{ mysql.k3s_db}}"  # Use UNIX socket
+   #--datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ vip.ip }}:3306)/{{ mysql.k3s_db}}"             # Option to use VIP and tcp
+  delegate_to: '{{ item }}'
+  run_once: yes
+  loop: "{{ groups['masters'] }}"
+  no_log: true
+
+- name: Get node token
+  shell: cat /var/lib/rancher/k3s/server/node-token
+  register: token_file
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- set_fact:
+    node_token: '{{ token_file.stdout }}'
+
+- name: Install workers
+  shell: curl -sfL https://get.k3s.io | \
+    K3S_URL=https://{{ hostvars[groups['masters'][0]].ansible_default_ipv4.address }}:6443 \
+    K3S_TOKEN={{ node_token }} \
+    sh -
+  when: ansible_host in groups['workers']
+
+- name: restart k3s
+  service:
+    name: k3s
+    state: restarted
+  delegate_to: '{{ item }}'
+  run_once: yes
+  loop: "{{ groups['masters'] }}"
