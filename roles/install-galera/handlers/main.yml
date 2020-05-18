@@ -1,0 +1,9 @@
+---
+# handlers file for roles/install-galera
+- name: restart mariadb
+  service:
+    name: mariadb
+    state: restarted
+  delegate_to: '{{ item }}'
+  run_once: yes
+  loop: "{{ groups['masters'] }}"

@@ -1,0 +1,26 @@
+---
+- name: Create k3s database
+  mysql_db:
+    name: '{{ mysql.k3s_db }}'
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  when: ansible_host == groups['masters'][0]
+
+- name: Create k3s database user
+  mysql_user:
+    name: '{{ mysql.k3s_db_user }}'
+    password: '{{ mysql.k3s_db_userpass }}'
+    priv: "{{ mysql.k3s_db }}.*:ALL"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  when: ansible_host == groups['masters'][0]
+  notify: restart mariadb
+  no_log: true
+
+- name: Grant remote access
+  command: mysql --user=root --password={{ mysql.root_pass }} -e \
+    "{{ item }}"
+  loop:
+  - GRANT ALL ON {{ mysql.k3s_db }}.* to '{{ mysql.k3s_db_user }}'@'%' IDENTIFIED BY '{{ mysql.k3s_db_userpass }}' WITH GRANT OPTION
+  - FLUSH PRIVILEGES
+  - FLUSH HOSTS
+  no_log: true

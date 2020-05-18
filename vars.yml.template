@@ -1,33 +1,50 @@
 ---
 ### Setup Host Variables ###
-root: 
+root:
+  username:
   pass:
-  authorized_key:
+  keypath:
+  keyfile:
+  remote_keypath:
 
 ansible:
-  username: 
-  password: 
-  authorized_key: 
+  username:
+  password:
+  keypath:
+  keyfile:
 
 ### K3S installation variables ###
-vip:
-  ip: 
-  pass: 
 log2ram:
   folder_size:
 
+vip:
+  ip:
+  pass:
+
+mysql:
+  root_pass:
+  k3s_db:
+  k3s_db_user:
+  k3s_db_userpass:
+
+k3s:
+  version:
+
 ### Storage configuration ###
+brick_mount:
+gluster_mount:
+
 vg:
-  name: 
-  drives: 
+  name:
+  drives:
 
 tpool:
-  name: 
-  size: 
+  name:
+  size:
 
 lvs:
-- name: 
-  size: 
+- name:
+  size:
 
 ### List volumes to remove ###
 lvs_remove:

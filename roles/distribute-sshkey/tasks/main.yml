@@ -5,7 +5,7 @@
     src: "{{ keypath }}/{{ keyfile }}"
     dest: "{{ remote_keypath }}/{{ keyfile }}"
     mode: '0600'
-  when: ansible_host == groups['init_master'][0]
+  when: ansible_host == groups['masters'][0]
 
 - name: Distribute public key
   authorized_key:

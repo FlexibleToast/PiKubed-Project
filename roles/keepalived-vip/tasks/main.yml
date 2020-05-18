@@ -23,7 +23,7 @@
     src: /etc/keepalived/keepalived.conf
     dest: /etc/keepalived/keepalived.conf.orig
     force: no
-  when: not file_stat.stat.exists and vip_priority is defined
+  when: not file_stat.stat.exists
   ignore_errors: yes
 
 - name: apply keepalived.conf
@@ -34,11 +34,9 @@
     group: root
     mode: 0644
   notify: restart keepalived
-  when: vip_priority is defined
 
 - name: start keepalived
   service:
     name: keepalived
     enabled: true
     state: started
-  when: vip_priority is defined

@@ -1,0 +1,41 @@
+---
+- name: Change root password
+  mysql_user:
+    name: root
+    password: '{{ db_root_password }}'
+    host_all: yes
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  notify: restart mariadb
+  no_log: true
+
+- name: Apply /root/.my.cnf
+  template:
+    src: templates/my.cnf.j2
+    dest: /root/.my.cnf
+    mode: 0600
+    owner: root
+    group: root
+
+- name: Apply root user my.cnf
+  template:
+    src: templates/my.cnf.j2
+    dest: /home/{{ root.username }}/.my.cnf
+    mode: 0600
+    owner: '{{ root.username }}'
+    group: '{{ root.username }}'
+  ignore_errors: yes
+
+- name: Remove anonymous users
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  notify: restart mariadb
+
+- name: Remove test database
+  mysql_db:
+    name: test
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  notify: restart mariadb

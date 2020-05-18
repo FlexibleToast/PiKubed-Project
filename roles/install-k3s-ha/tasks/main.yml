@@ -1,6 +1,6 @@
 ---
 # tasks file for roles/install-k3s-ha
-- name: install k3s SELinux support
+- name: Install k3s SELinux support
   yum:
     name: '{{ item }}'
     state: present
@@ -11,7 +11,7 @@
   when: ansible_distribution_file_variety == "RedHat"
 
 - name: Verify cgroup flags are enabled
-  shell: grep "{{ item }}" /boot/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/cmdline.txt && touch /tmp/cgroup.reboot
+  shell: grep "{{ item }}" /boot/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/cmdline.txt || touch /tmp/cgroup.reboot
   loop:
     - 'cgroup\_enable\=cpuset'
     - 'cgroup\_enable\=memory'
@@ -25,67 +25,63 @@
 - name: Reboot to apply cgroups
   reboot:
   when: cgroup_reboot.stat.exists
+  delegate_to: "{{ item }}"
+  run_once: yes
+  loop: "{{ groups['pikubed_cluster'] }}"
 
-- name: install initial master
+- name: Install masters
   shell: curl -sfL https://get.k3s.io | \
-    sh -s - server --cluster-init
+    sh -s - server \
+    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ vip.ip }}:3306)/{{ mysql.k3s_db}}"
   args:
-    creates: /var/lib/rancher/k3s/server/node-token
-  when: ansible_host in groups['init_master']
-  register: cluster_init
+    creates: /var/lib/rancher/k3s/server/
+  delegate_to: '{{ item }}'
+  run_once: yes
+  loop: "{{ groups['masters'] }}"
+  no_log: true
 
-- name: get node token
+- name: Get node token
   shell: cat /var/lib/rancher/k3s/server/node-token
-  register: node_token
-  delegate_to: "{{ groups['init_master'][0] }}"
+  register: token_file
+  delegate_to: "{{ groups['masters'][0] }}"
+ 
+- set_fact:
+    node_token: '{{ token_file.stdout }}'
 
-- name: Wait for master to stabilize
-  pause:
-    minutes: 5
-  when: cluster_init.changed
-
-- name: install masters
-  shell: curl -sfL https://get.k3s.io | \
-    sh -s - server --server https://{{ hostvars[groups['init_master'][0]].ansible_default_ipv4.address }} --token {{ node_token.stdout }}
-  args:
-    creates: /var/lib/rancher/k3s/server
-  when: ansible_host in groups['masters']
-  ignore_errors: yes
-
-- name: check k3s running on all masters
+- name: Check k3s running on all masters
   service:
     name: k3s
     state: started
   when: ansible_host in groups['masters']
 
-- name: install nodes
+- name: Install workers
   shell: curl -sfL https://get.k3s.io | \
-    K3S_URL=https://{{ hostvars[groups['init_master'][0]].ansible_default_ipv4.address }}:6443 \
-    K3S_TOKEN={{ node_token.stdout }} \
+    K3S_URL=https://{{ hostvars[groups['masters'][0]].ansible_default_ipv4.address }}:6443 \
+    K3S_TOKEN={{ node_token }} \
     sh -
   args:
     creates: /var/lib/rancher/k3s/agent/client-ca.crt
   when: ansible_host in groups['workers']
 
-- name: create k3s.yaml.orig
+- name: Create k3s.yaml.orig
   copy:
     remote_src: yes
     src: /etc/rancher/k3s/k3s.yaml
     dest: /etc/rancher/k3s/k3s.yaml.orig
     force: no
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
 
-- name: modify k3s.yaml with VIP
+- name: Modify k3s.yaml with VIP
   replace:
     path: /etc/rancher/k3s/k3s.yaml
     regexp: "server: https://127.0.0.1:6443"
     replace: "server: https://{{ vip.ip }}:6443"
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
 
-- name: get kube config
+- name: Get kube config
   fetch:
     src: /etc/rancher/k3s/k3s.yaml
     dest: k3s.yaml
     mode: 0600
     flat: yes
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]

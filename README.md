@@ -10,62 +10,44 @@ All playbooks expect an inventory file that has a master and workers group. If y
 
 ```textfile
 [pikubed_cluster:children]
-master
+masters
 workers
 
-[master]
+[pikubed_cluster:vars]
+ansible_python_interpreter=/usr/bin/python3 # This is used because Debian defualts to python2 still
+
+[masters]
 pikubed-m0  vip_priority=110
+pikubed-m1  vip_priority=109
+pikubed-m1  vip_priority=108
 
 [workers]
-pikubed-0  vip_priority=109
-pikubed-1
-pikubed-2
+pikubed-w0
 ```
-#### setup-hosts.yml
+#### vars.yml.template
+Make a copy of this file called vars.yml and populate with the values for your environment. Note that the way the main playbook works it uses the root user, sets root's password, and can reboot the nodes at some later time. When the node reboots the password Ansible is using will no longer be valid and will fail to connect. This is okay as the play should be idempotent, just re-run main.yml and specify the new password. Another way around this is to assign the root user the same ssh key as Ansible uses.
 
-I'm using the CentOS 7 image available for the Raspberry Pi 4. With this image there is a default root user and ssh access. Therefore after flashing the SD cards with the image this playbook is run to setup all hosts to be prepared for the rest of the procedure. The following is performed:
+#### main.yml
+This is the playbook used to install your Kubernetes cluster. Right now there are two usable options, high availability and non-high availability. By default it is configured for high availability and tested on Raspbian. A lot of work was done using the CentOS 7 image so minimal changes should be required to get it to work with CentOS 7. It will do the following:
 
-- Update all packages
+  - Update all hosts
+  - Install required packages
+  - Reboot nodes to ensure using latest updates
+  - Expand the root filesystem to entire SD card
+  - Update root user password and add ssh key
+  - Create ansible user and ssh key if user is defined
+  - Change hostname of machines to match inventory names
+  - Create /etc/hosts including all node members
+  - Move the /tmp directory to tmpfs
+  - Install log2ram
+  - Distribute ssh keys (Only needed if using k3sup method that is currently not working since I've coded it to use the embedded HA that does not work in k3s at this time)
+  - Install keepalived for virtual IP
+  - Install Galera (highly available MariaDB used for install-k3s-ha role creating an "external datastore")
+  - Install k3s on all nodes
 
-- If packages were updated the host is rebooted
+#### upgrade.yml NOT UPDATED YET HA
 
-- Expand the root filesystem to the entire SD card
-
-- Change the root user password
-
-- Add an ssh key for the root user if specified
-
-- Create a user for Ansible
-
-- Copy Ansible user's ssh key if specified
-
-- Change the hostnames to match the inventory
-
-#### configure.yml
-
-This playbook handles the initial setup of the Raspberry Pis. The following is performed:
-
-- System packages updated
-
-- Creates `/etc/hosts` file that includes all cluster members on all hosts
-
-- Moves `/tmp` to `tmpfs` to minimize SD card writes
-
-- Installs log2ram to minimize SD card writes
-
-  - You can use `log_folder_size` variable to adjust size in mb the size of the log folder in ram
-
-- Installs k3s on master
-
-- Adds workers to cluster using node-token
-
-- Fetches .kube/config file and saves it as `k3s.yaml` on localhost
-
-- Installs and configures a VIP for high availability access
-
-#### upgrade.yml
-
-Upgrades the master server, rejoins workers, restarts k3s service
+This was created when I was still using the non high availability default installation of k3s. The playbook needs to be updated.
 
 #### reboot.yml
 

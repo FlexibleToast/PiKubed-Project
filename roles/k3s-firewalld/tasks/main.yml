@@ -20,6 +20,7 @@
   loop:
   - 80/tcp
   - 443/tcp
+  - 3306/tcp  # MariaDB
   - 6443/tcp  # Kubernetes API
   - 8472/udp  # Required only for Flannel VXLAN
   - 10250/tcp # kubelet

@@ -1,12 +1,19 @@
 ---
 - name: Update all packages
   apt:
-    force_apt_get: yes
     name: '*'
     state: latest
     update_cache: yes
     autoremove: yes
   register: updated
+
+- name: Install required packages
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - python3-pip
+  - python-setuptools
 
 - name: Reboot hosts if updated
   reboot:

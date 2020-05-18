@@ -1,7 +1,7 @@
 ---
 - name: Configure Raspberry Pi Hosts
   hosts: pikubed_cluster
-  remote_user: root
+  remote_user: pi
   become: yes
   vars_files: vars.yml
 
@@ -9,23 +9,32 @@
   - role: common
     tags: setup-hosts
 
-  #- role: k3s-firewalld
-    #when: ansible_distribution_file_variety == "RedHat"
-
   - role: log2ram
     vars:
     - log_folder_size: '{{ log2ram.folder_size }}'
 
-  - role: distribute-sshkey
-    vars:
-      keyuser: '{{ root.username }}'
-      keypath: '{{ root.keypath }}'
-      keyfile: '{{ root.keyfile }}'
-      remote_keypath: '{{ root.remote_keypath }}'
+  # Used only if using k3sup
+  #- role: distribute-sshkey
+  #  vars:
+  #    keyuser: '{{ root.username }}'
+  #    keypath: '{{ root.keypath }}'
+  #    keyfile: '{{ root.keyfile }}'
+  #    remote_keypath: '{{ root.remote_keypath }}'
+  #  tags: distribute-sshkeys
 
   - role: keepalived-vip
     vars:
     - vip_pass: '{{ vip.pass }}'
     - vip_ip: '{{ vip.ip }}'
+    when: vip_priority is defined
+    tags: setup-vip
 
-  - role: install-k3sup-ha
+  - role: install-galera
+    vars:
+    - db_root_password: '{{ mysql.root_pass }}'
+    when: ansible_host in groups['masters']
+    tags: setup-galera
+
+
+  - role: install-k3s-ha
+    tags: setup-k3s

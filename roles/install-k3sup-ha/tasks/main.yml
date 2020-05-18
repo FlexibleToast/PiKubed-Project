@@ -11,22 +11,20 @@
   when: ansible_distribution_file_variety == "RedHat"
 
 - name: Verify cgroup flags are enabled
-  lineinfile:
-    path: /boot/cmdline.txt
-    backrefs: yes
-    state: present
-    regexp: '^(.*) {{item}}(.*)$'
-    backup: yes
-    line: '\g<1> {{item}}\g<2>'
-  with_items:
-    - 'cgroup_enable=cpuset'
-    - 'cgroup_enable=memory'
-    - 'cgroup_memory=1'
-  register: cgroup_flags
+  shell: grep "{{ item }}" /boot/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/cmdline.txt || touch /tmp/cgroup.reboot
+  loop:
+    - 'cgroup\_enable\=cpuset'
+    - 'cgroup\_enable\=memory'
+    - 'cgroup\_memory\=1'
+
+- name: Check if cgroups changed
+  stat:
+    path: /tmp/cgroup.reboot
+  register: cgroup_reboot
 
 - name: Reboot to apply cgroups
   reboot:
-  when: cgroup_flags.changed
+  when: cgroup_reboot.stat.exists
 
 - name: Check if k3sup already installed
   stat:
@@ -51,7 +49,7 @@
     - k3sup
     - install
     - --ip
-    - "{{ hostvars[groups['init_master'][0]].ansible_default_ipv4.address }}"
+    - "{{ hostvars[groups['masters'][0]].ansible_default_ipv4.address }}"
     - --user
     - '{{ root.username }}'
     - --ssh-key
@@ -60,11 +58,7 @@
     #- '{{ k3s.version }}'
     - --cluster
     creates: /var/lib/rancher/k3s/server/node-token
-  when: ansible_host in groups['init_master']
-
-- name: Pause for 5 minutes
-  pause:
-    minutes: 5
+  when: ansible_host == groups['masters'][0]
 
 - name: Install masters
   command:
@@ -79,14 +73,14 @@
     - --server-user
     - '{{ root.username }}'
     - --server-ip
-    - "{{ hostvars[groups['init_master'][0]].ansible_default_ipv4.address }}"
+    - "{{ hostvars[groups['masters'][0]].ansible_default_ipv4.address }}"
     - --ssh-key
     - "{{ root.remote_keypath }}/{{ root.keyfile }}"
     #- --k3s-version
     #- '{{ k3s.version }}'
     - --server
-  when: ansible_host in groups['init_master']
-  loop: "{{ groups['masters'] }}"
+  when: ansible_host == groups['masters'][0]
+  loop: "{{ groups['masters'][1:] }}"
   ignore_errors: yes
 
 - name: Ensure k3s is running on masters
@@ -94,7 +88,7 @@
     name: k3s
     state: started
     enabled: yes
-  when: ansible_host not in groups['workers']
+  when: ansible_host in groups['masters']
 
 - name: Install workers
   command:
@@ -105,14 +99,14 @@
     - --ip
     - "{{ hostvars[item].ansible_default_ipv4.address }}"
     - --server-ip
-    - "{{ hostvars[groups['init_master'][0]].ansible_default_ipv4.address }}"
+    - "{{ hostvars[groups['masters'][0]].ansible_default_ipv4.address }}"
     - --user
     - '{{ root.username }}'
     - --ssh-key
     - "{{ root.remote_keypath }}/{{ root.keyfile }}"
     #- --k3s-version
     #- '{{ k3s.version }}'
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
   loop: "{{ groups['workers'] }}"
 
 - name: create k3s.yaml.orig
@@ -121,14 +115,14 @@
     src: /etc/rancher/k3s/k3s.yaml
     dest: /etc/rancher/k3s/k3s.yaml.orig
     force: no
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
 
 - name: modify k3s.yaml with VIP
   replace:
     path: /etc/rancher/k3s/k3s.yaml
     regexp: "server: https://127.0.0.1:6443"
     replace: "server: https://{{ vip.ip }}:6443"
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
 
 - name: get kube config
   fetch:
@@ -136,4 +130,4 @@
     dest: k3s.yaml
     mode: 0600
     flat: yes
-  when: ansible_host in groups['init_master']
+  when: ansible_host == groups['masters'][0]
