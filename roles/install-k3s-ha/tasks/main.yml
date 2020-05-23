@@ -16,6 +16,15 @@
     - 'cgroup\_enable\=cpuset'
     - 'cgroup\_enable\=memory'
     - 'cgroup\_memory\=1'
+  when: ansible_facts['distribution'] != 'Ubuntu'
+
+- name: Verify cgroup flags are enabled
+  shell: grep "{{ item }}" /boot/firmware/nobtcmd.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/firmware/nobtcmd.txt || touch /tmp/cgroup.reboot
+  loop:
+    - 'cgroup\_enable\=cpuset'
+    - 'cgroup\_enable\=memory'
+    - 'cgroup\_memory\=1'
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Check if cgroups changed
   stat:
@@ -32,8 +41,7 @@
 - name: Install masters
   shell: curl -sfL https://get.k3s.io | \
     sh -s - server \
-    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@unix(/var/run/mysqld/mysqld.sock)/{{ mysql.k3s_db}}"  # Use UNIX socket
-   #--datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ vip.ip }}:3306)/{{ mysql.k3s_db}}"             # Option to use VIP and tcp
+    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ ansible_host }}:3306)/{{ mysql.k3s_db}}"
   args:
     creates: /var/lib/rancher/k3s/server/
   delegate_to: '{{ item }}'

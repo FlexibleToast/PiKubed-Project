@@ -1,0 +1,17 @@
+---
+- name: Install gluster prerequirements
+  yum:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - centos-release-gluster
+  - epel-release
+
+- name: Install gluster packages
+  yum:
+    name: '{{ item }}'
+    state: present
+    update_cache: yes
+  loop:
+  - glusterfs-server
+  - glusterfs-client

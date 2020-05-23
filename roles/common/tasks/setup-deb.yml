@@ -14,6 +14,17 @@
   loop:
   - python3-pip
   - python-setuptools
+  - git
+
+- name: Remove ufw
+  apt:
+    name: ufw
+    state: absent
+
+- name: Install firewalld
+  apt:
+    name: firewalld
+    state: present
 
 - name: Reboot hosts if updated
   reboot:

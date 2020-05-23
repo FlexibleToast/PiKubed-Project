@@ -1,0 +1,77 @@
+---
+# tasks file for roles/install-heketi
+- name: Open firewalld ports
+  firewalld:
+    port: '{{ item }}'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+  - 2222/tcp  # GlusterFS pod's sshd
+  - 24007/tcp # GlusterFS Daemon
+  - 24008/tcp # GlusterFS Management
+  - 49152-49251/tcp # Brick ports, each brick uses its own port
+
+- name: Enable required kernel modules
+  modprobe:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - dm_snapshot
+  - dm_mirror
+  - dm_thin_pool
+
+- name: Install GlusterFS Debian
+  include_tasks: gluster-deb.yml
+  when: ansible_distribution_file_variety == "Debian"
+
+- name: Install GlusterFS CentOS 7
+  include_tasks: gluster-rpm.yml
+  when: ansible_distribution_file_variety == "RedHat"
+
+- block:
+  - name: Create /src directory
+    file:
+      path: /src
+      state: directory
+
+  - name: Clone gluster-kubernetes repository
+    git:
+      repo: https://github.com/gluster/gluster-kubernetes.git
+      dest: /src/gluster-kubernetes
+
+  - name: Copy topology.json template
+    template:
+      src: templates/topology.json.j2
+      dest: /src/topology.json
+
+  - name: Create heketi namespace
+    block:
+    - name: Install python modules
+      pip:
+        name: '{{ item }}'
+        state: present
+      loop:
+      - kubernetes
+      - openshift
+
+    - name: Create namespace
+      k8s:
+        name: '{{ heketi.namespace }}'
+        kind: Namespace
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+    when: heketi.namespace is defined
+
+  - name: Run gk-deploy
+    command:
+      argv:
+      - /src/gluster-kubernetes/deploy/gk-deploy
+      - "{%- if heketi.namespace is defined -%}--namespace {{ heketi.namespace }}{%- endif -%}"
+      - --templates_dir /src/gluster-kubernetes/deploy/kube-templates
+      - --admin-key {{ heketi.admin_key }}
+      - --user-key {{ heketi.user_key }}
+      - --deploy-gluster
+      - --yes
+      - /src/topology.json
+  run_once: yes
+  delegate_to: "{{ groups['masters'][0] }}"

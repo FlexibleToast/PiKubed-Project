@@ -8,6 +8,18 @@
   - mariadb-server
   - mariadb-client
 
+- name: Open firewalld ports
+  firewalld:
+    port: '{{ item }}'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+  - 3306/tcp  # MariaDB
+  - 4567/tcp  # Galera Replication
+  - 4568/tcp  # IST Incremental State Transfers
+  - 4444/tcp  # SST State Snapshot Transfer
+
 - name: Start MariaDB
   service:
     name: mariadb

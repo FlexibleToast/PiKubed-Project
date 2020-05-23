@@ -7,6 +7,12 @@
   include_tasks: setup-deb.yml
   when: ansible_distribution_file_variety == "Debian"
 
+- name: Start and enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 - name: Change root password
   user:
     name: '{{ root.username }}'

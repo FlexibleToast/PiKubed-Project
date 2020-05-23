@@ -1,10 +1,5 @@
 ---
 # tasks file for roles/k3s-firewalld
-- name: Install firewalld
-  yum:
-    name: firewalld
-    state: present
-
 - name: Start firewalld
   service:
     name: firewalld

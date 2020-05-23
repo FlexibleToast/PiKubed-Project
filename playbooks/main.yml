@@ -1,7 +1,7 @@
 ---
 - name: Configure Raspberry Pi Hosts
   hosts: pikubed_cluster
-  remote_user: pi
+  remote_user: ubuntu
   become: yes
   vars_files: vars.yml
 
@@ -35,6 +35,9 @@
     when: ansible_host in groups['masters']
     tags: setup-galera
 
+  - role: k3s-firewalld
 
   - role: install-k3s-ha
     tags: setup-k3s
+
+  #- role: install-heketi
