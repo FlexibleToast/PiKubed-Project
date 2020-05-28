@@ -1,9 +1,16 @@
 ---
 - name: Reboot the cluster in series
   hosts: pikubed_cluster
+  remote_user: ubuntu
   become: true
   serial: 1
   gather_facts: no
   tasks:
-  - name: Reboot node
+  - name: Reboot master node
     reboot:
+      test_command: systemctl is-active etcd.service
+    when: ansible_host in groups['masters']
+
+  - name: Reboot worker node
+    reboot:
+    when: ansible_host not in groups['masters']

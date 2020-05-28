@@ -1,0 +1,8 @@
+---
+- name: Install prerequirements
+  yum:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - wget
+  - curl

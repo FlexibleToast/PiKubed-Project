@@ -19,7 +19,7 @@
   when: ansible_facts['distribution'] != 'Ubuntu'
 
 - name: Verify cgroup flags are enabled
-  shell: grep "{{ item }}" /boot/firmware/nobtcmd.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/firmware/nobtcmd.txt || touch /tmp/cgroup.reboot
+  shell: grep "{{ item }}" /boot/firmware/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/firmware/cmdline.txt && touch /tmp/cgroup.reboot
   loop:
     - 'cgroup\_enable\=cpuset'
     - 'cgroup\_enable\=memory'
@@ -33,27 +33,29 @@
 
 - name: Reboot to apply cgroups
   reboot:
+    post_reboot_delay: 30
   when: cgroup_reboot.stat.exists
-  delegate_to: "{{ item }}"
+  delegate_to: '{{ item }}'
   run_once: yes
   loop: "{{ groups['pikubed_cluster'] }}"
 
 - name: Install masters
   shell: curl -sfL https://get.k3s.io | \
     sh -s - server \
-    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ ansible_host }}:3306)/{{ mysql.k3s_db}}"
+    --datastore-endpoint="{%- for host in groups['masters'] -%}
+      http://{{ host }}:2379{{ "," if not loop.last }}
+    {%- endfor -%}"
   args:
-    creates: /var/lib/rancher/k3s/server/
+    creates: /var/lib/rancher/k3s/server/node-token
   delegate_to: '{{ item }}'
   run_once: yes
   loop: "{{ groups['masters'] }}"
-  no_log: true
 
 - name: Get node token
   shell: cat /var/lib/rancher/k3s/server/node-token
   register: token_file
   delegate_to: "{{ groups['masters'][0] }}"
- 
+
 - set_fact:
     node_token: '{{ token_file.stdout }}'
 

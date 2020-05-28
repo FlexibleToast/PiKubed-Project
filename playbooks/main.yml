@@ -3,7 +3,8 @@
   hosts: pikubed_cluster
   remote_user: ubuntu
   become: yes
-  vars_files: vars.yml
+  vars_files:
+  - vars.yml
 
   roles:
   - role: common
@@ -13,15 +14,6 @@
     vars:
     - log_folder_size: '{{ log2ram.folder_size }}'
 
-  # Used only if using k3sup
-  #- role: distribute-sshkey
-  #  vars:
-  #    keyuser: '{{ root.username }}'
-  #    keypath: '{{ root.keypath }}'
-  #    keyfile: '{{ root.keyfile }}'
-  #    remote_keypath: '{{ root.remote_keypath }}'
-  #  tags: distribute-sshkeys
-
   - role: keepalived-vip
     vars:
     - vip_pass: '{{ vip.pass }}'
@@ -29,11 +21,14 @@
     when: vip_priority is defined
     tags: setup-vip
 
-  - role: install-galera
-    vars:
-    - db_root_password: '{{ mysql.root_pass }}'
+  - role: install-etcd
     when: ansible_host in groups['masters']
-    tags: setup-galera
+
+  # - role: install-galera
+  #   vars:
+  #   - db_root_password: '{{ mysql.root_pass }}'
+  #   when: ansible_host in groups['masters']
+  #   tags: setup-galera
 
   - role: k3s-firewalld
 

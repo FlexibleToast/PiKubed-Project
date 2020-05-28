@@ -1,0 +1,25 @@
+[Unit]
+Description=etcd service
+Documentation=https://github.com/etcd-io/etcd
+
+[Service]
+Environment="ETCD_UNSUPPORTED_ARCH=arm64"
+Type=notify
+User=etcd
+ExecStart=/usr/local/bin/etcd \
+  --name {{ ansible_host }} \
+  --data-dir=/var/lib/etcd \
+  --initial-advertise-peer-urls http://{{ ansible_default_ipv4.address }}:2380 \
+  --listen-peer-urls http://{{ ansible_default_ipv4.address }}:2380 \
+  --listen-client-urls http://{{ ansible_default_ipv4.address }}:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls http://{{ ansible_default_ipv4.address }}:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster {% for host in groups['masters'] -%}
+    {{ host }}=http://{{ host }}:2380{{ "," if not loop.last }}
+  {%- endfor %} \
+  --initial-cluster-state new
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

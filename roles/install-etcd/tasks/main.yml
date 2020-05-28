@@ -1,0 +1,79 @@
+---
+# tasks file for roles/install-etcd
+- name: Open firewalld ports
+  firewalld:
+    port: '{{ item }}'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+  - 2379/tcp  # etcd client
+  - 2380/tcp  # etcd server
+
+- name: Install prerequirements (apt)
+  include_tasks: etcd-deb.yml
+  when: ansible_distribution_file_variety == "Debian"
+
+- name: Install prerequirements (yum)
+  include_tasks: etcd-rpm.yml
+  when: ansible_distribution_file_variety == "RedHat"
+
+- name: Query github api for etcd versions
+  uri:
+    url: https://api.github.com/repos/etcd-io/etcd/releases/latest
+  register: result
+
+- name: Save latest version as variable
+  set_fact:
+    etcd_version: '{{ result.json.name }}'
+
+- name: Download latest version
+  unarchive:
+    src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-arm64.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/etcd-{{ etcd_version }}-linux-arm64/etcd
+
+- name: Copy binaries to /usr/local/bin
+  copy:
+    src: /tmp/etcd-{{ etcd_version }}-linux-arm64/{{ item }}
+    dest: /usr/local/bin/{{ item }}
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: yes
+  loop:
+  - etcd
+  - etcdctl
+
+- name: Create etcd group
+  group:
+    name: etcd
+    system: yes
+    state: present
+
+- name: Create etcd user
+  user:
+    name: etcd
+    system: yes
+    shell: /sbin/nologin
+    groups: etcd
+
+- name: Assign etcd permissions to /var/lib/etcd
+  file:
+    path: /var/lib/etcd
+    state: directory
+    owner: etcd
+    group: etcd
+
+- name: Create etcd service
+  template:
+    src: templates/etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+
+- name: Start and enable etcd
+  service:
+    name: etcd
+    state: started
+    enabled: yes
+    daemon_reload: yes

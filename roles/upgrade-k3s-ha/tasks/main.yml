@@ -3,12 +3,11 @@
 - name: Upgrade masters
   shell: curl -sfL https://get.k3s.io | \
     sh -s - server \
-    --datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@unix(/var/run/mysqld/mysqld.sock)/{{ mysql.k3s_db}}"  # Use UNIX socket
-   #--datastore-endpoint="mysql://{{ mysql.k3s_db_user }}:{{ mysql.k3s_db_userpass }}@tcp({{ vip.ip }}:3306)/{{ mysql.k3s_db}}"             # Option to use VIP and tcp
-  delegate_to: '{{ item }}'
+    --datastore-endpoint="{%- for host in groups['masters'] -%}
+      http://{{ host }}:2379{{ "," if not loop.last }}
+    {%- endfor -%}"
   run_once: yes
   loop: "{{ groups['masters'] }}"
-  no_log: true
 
 - name: Get node token
   shell: cat /var/lib/rancher/k3s/server/node-token

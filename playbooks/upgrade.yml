@@ -32,4 +32,9 @@
 
   - name: Reboot node
     reboot:
-    when: updated.changed
+      test_command: systemctl is-active etcd.service
+    when: ansible_host in groups['masters'] and updated.changed
+
+  - name: Reboot node
+    reboot:
+    when: ansible_host not in groups['masters'] and updated.changed
