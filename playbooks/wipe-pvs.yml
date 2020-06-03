@@ -1,0 +1,18 @@
+---
+- hosts: pikubed_cluster
+  remote_user: '{{ ansible.username }}'
+  become: yes
+  vars_files:
+  - vars.yml
+  gather_facts: no
+
+  tasks:
+  - name: Remove partition tables from pvs
+    command:
+      argv:
+      - dd
+      - if=/dev/zero
+      - of={{ item }}
+      - bs=1024
+      - count=1
+    loop: '{{ vg.drives }}'

@@ -21,12 +21,6 @@ vip:
   ip:
   pass:
 
-mysql:
-  root_pass:
-  k3s_db:
-  k3s_db_user:
-  k3s_db_userpass:
-
 k3s:
   version:
 

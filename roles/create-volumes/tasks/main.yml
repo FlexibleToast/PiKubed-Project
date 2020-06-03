@@ -1,5 +1,11 @@
 ---
 # tasks file for roles/create-volumes
+- name: Ensure firewalld is running
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+    
 - name: Open firewalld tcp ports
   firewalld:
     port: '{{ item }}/tcp'

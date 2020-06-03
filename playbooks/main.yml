@@ -8,29 +8,29 @@
 
   roles:
   - role: common
-    tags: setup-hosts
+    tags: common
 
   - role: log2ram
     vars:
     - log_folder_size: '{{ log2ram.folder_size }}'
-    tags: install-log2ram
+    tags: log2ram
 
   - role: keepalived-vip
     vars:
     - vip_pass: '{{ vip.pass }}'
     - vip_ip: '{{ vip.ip }}'
     when: vip_priority is defined
-    tags: setup-vip
+    tags: vip
 
   - role: install-etcd
     when: ansible_host in groups['masters']
-    rags: instal-etcd
+    rags: etcd
 
   - role: k3s-firewalld
-    tags: install-k3s
+    tags: k3s
 
   - role: install-k3s-ha
-    tags: install-k3s
+    tags: k3s
 
   - role: create-volumes
     tags: create-volumes
