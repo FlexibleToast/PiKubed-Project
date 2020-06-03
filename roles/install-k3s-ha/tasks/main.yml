@@ -10,7 +10,7 @@
   - https://rpm.rancher.io/k3s-selinux-0.1.1-rc1.el7.noarch.rpm
   when: ansible_distribution_file_variety == "RedHat"
 
-- name: Verify cgroup flags are enabled
+- name: Verify cgroup flags are enabled (Raspberry Pi OS | CentOS)
   shell: grep "{{ item }}" /boot/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/cmdline.txt || touch /tmp/cgroup.reboot
   loop:
     - 'cgroup\_enable\=cpuset'
@@ -18,7 +18,7 @@
     - 'cgroup\_memory\=1'
   when: ansible_facts['distribution'] != 'Ubuntu'
 
-- name: Verify cgroup flags are enabled
+- name: Verify cgroup flags are enabled (Ubuntu)
   shell: grep "{{ item }}" /boot/firmware/cmdline.txt || sed -i 's/\(.*\)/\1 {{ item }}/g' /boot/firmware/cmdline.txt && touch /tmp/cgroup.reboot
   loop:
     - 'cgroup\_enable\=cpuset'

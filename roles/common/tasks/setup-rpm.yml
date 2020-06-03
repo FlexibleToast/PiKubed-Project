@@ -6,13 +6,6 @@
     update_cache: yes
   register: updated
 
-- name: Install required packages
-  yum:
-    name: '{{ item }}'
-    state: present
-  loop:
-  - git
-
 - name: Install firewalld
   yum:
     name: firewalld

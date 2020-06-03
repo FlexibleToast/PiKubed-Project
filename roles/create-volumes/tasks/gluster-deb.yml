@@ -1,8 +1,10 @@
 ---
-- name: Install gluster packages
+- name: Install prerequirements
   apt:
     name: '{{ item }}'
     state: present
   loop:
+  - thin-provisioning-tools
+  - xfsprogs
   - glusterfs-server
   - glusterfs-client

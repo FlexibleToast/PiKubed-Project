@@ -7,15 +7,6 @@
     autoremove: yes
   register: updated
 
-- name: Install required packages
-  apt:
-    name: '{{ item }}'
-    state: present
-  loop:
-  - python3-pip
-  - python-setuptools
-  - git
-
 - name: Remove ufw
   apt:
     name: ufw
@@ -29,7 +20,7 @@
 - name: Reboot hosts if updated
   reboot:
   when: updated.changed
- 
+
 - name: Expand rootfs of Raspbian
   command: raspi-config --expand-rootfs
   ignore_errors: yes

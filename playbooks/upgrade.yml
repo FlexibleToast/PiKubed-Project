@@ -2,6 +2,7 @@
 - name: Upgrade K3S
   hosts: pikubed_cluster
   become: yes
+  remote_user: '{{ ansible.username }}'
   vars_files: vars.yml
   roles:
   - role: upgrade-k3s-ha
@@ -9,6 +10,7 @@
 - name: Update and reboot nodes one at a time
   hosts: pikubed_cluster
   become: yes
+  remote_user: '{{ ansible.username }}'
   serial: 1
   gather_facts: no
   tasks:

@@ -1,7 +1,7 @@
 ---
 - name: Configure Raspberry Pi Hosts
   hosts: pikubed_cluster
-  remote_user: ubuntu
+  remote_user: '{{ root.username }}'
   become: yes
   vars_files:
   - vars.yml
@@ -13,6 +13,7 @@
   - role: log2ram
     vars:
     - log_folder_size: '{{ log2ram.folder_size }}'
+    tags: install-log2ram
 
   - role: keepalived-vip
     vars:
@@ -23,16 +24,13 @@
 
   - role: install-etcd
     when: ansible_host in groups['masters']
-
-  # - role: install-galera
-  #   vars:
-  #   - db_root_password: '{{ mysql.root_pass }}'
-  #   when: ansible_host in groups['masters']
-  #   tags: setup-galera
+    rags: instal-etcd
 
   - role: k3s-firewalld
+    tags: install-k3s
 
   - role: install-k3s-ha
-    tags: setup-k3s
+    tags: install-k3s
 
-  #- role: install-heketi
+  - role: create-volumes
+    tags: create-volumes

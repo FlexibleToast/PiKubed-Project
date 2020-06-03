@@ -1,9 +1,12 @@
 ---
-- name: Install gluster prerequirements
+- name: Install prerequirements
   yum:
     name: '{{ item }}'
     state: present
   loop:
+  - lvm2
+  - thin-provisioning-tools
+  - xfsprogs
   - centos-release-gluster
   - epel-release
 
@@ -11,7 +14,6 @@
   yum:
     name: '{{ item }}'
     state: present
-    update_cache: yes
   loop:
   - glusterfs-server
   - glusterfs-client

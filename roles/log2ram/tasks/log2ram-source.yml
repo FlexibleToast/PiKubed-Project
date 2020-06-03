@@ -15,5 +15,5 @@
     cmd: ./install.sh
     chdir: /tmp/log2ram-master
 
-- name: Reboot node to activate log2ram
+- name: Reboot to activate log2ram
   reboot:

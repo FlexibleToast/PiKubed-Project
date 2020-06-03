@@ -2,12 +2,13 @@
 - name: Remove logical and GlusterFS persistent volumes
   hosts: pikubed_cluster
   become: true
+  remote_user: '{{ ansible.username }}'
   vars_files: vars.yml
   tasks:
 
   - name: Unmount GlusterFS volumes
     mount:
-      path: /docker/{{ item }}
+      path: '{{ gluster_mount}}/{{ item }}'
       state: absent
     loop: '{{ lvs_remove }}'
 
@@ -20,13 +21,13 @@
 
   - name: Unmount bricks
     mount:
-      path: /bricks/{{ item }}
+      path: '{{ brick_mount}}/{{ item }}'
       state: absent
     loop: '{{ lvs_remove }}'
 
   - name: Remove brick mountpoints
     file:
-      path: /bricks/{{ item }}
+      path: '{{ brick_mount}}/{{ item }}'
       state: absent
     loop: '{{ lvs_remove }}'
 
@@ -38,4 +39,3 @@
       state: absent
       force: yes
     loop: '{{ lvs_remove }}'
-

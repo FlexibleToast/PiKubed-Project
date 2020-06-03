@@ -13,6 +13,12 @@
     state: started
     enabled: yes
 
+- name: Change current runlevel
+  command: systemctl isolate multi-user.target
+
+- name: change runlevel default target
+  command: systemctl set-default multi-user.target
+
 - name: Change root password
   user:
     name: '{{ root.username }}'
