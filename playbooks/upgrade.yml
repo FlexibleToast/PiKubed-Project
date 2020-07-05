@@ -6,11 +6,13 @@
   vars_files: vars.yml
   roles:
   - role: upgrade-k3s-ha
+    tags: k3s
 
 - name: Update and reboot nodes one at a time
   hosts: pikubed_cluster
   become: yes
   remote_user: '{{ ansible.username }}'
+  vars_files: vars.yml
   serial: 1
   gather_facts: no
   tasks:
@@ -22,6 +24,7 @@
       update_cache: yes
     register: updated
     when: ansible_distribution_file_variety == "RedHat"
+    tags: os
 
   - name: Update node (apt)
     apt:
@@ -31,12 +34,15 @@
       autoremove: yes
     register: updated
     when: ansible_distribution_file_variety == "Debian"
+    tags: os
 
   - name: Reboot node
     reboot:
       test_command: systemctl is-active etcd.service
     when: ansible_host in groups['masters'] and updated.changed
+    tags: os
 
   - name: Reboot node
     reboot:
     when: ansible_host not in groups['masters'] and updated.changed
+    tags: os

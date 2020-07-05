@@ -1,5 +1,11 @@
 ---
 # tasks file for roles/install-etcd
+- name: Start firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 - name: Open firewalld ports
   firewalld:
     port: '{{ item }}'

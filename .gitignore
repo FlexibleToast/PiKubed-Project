@@ -6,3 +6,4 @@ k3s.yaml
 *.swp
 /vars.yml
 deployments
+README.md

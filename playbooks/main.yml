@@ -31,6 +31,3 @@
 
   - role: install-k3s-ha
     tags: k3s
-
-  - role: create-volumes
-    tags: create-volumes

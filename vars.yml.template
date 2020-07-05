@@ -21,9 +21,6 @@ vip:
   ip:
   pass:
 
-k3s:
-  version:
-
 ### Storage configuration ###
 brick_mount:
 gluster_mount:

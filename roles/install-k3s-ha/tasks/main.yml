@@ -43,7 +43,7 @@
   shell: curl -sfL https://get.k3s.io | \
     sh -s - server \
     --datastore-endpoint="{%- for host in groups['masters'] -%}
-      http://{{ host }}:2379{{ "," if not loop.last }}
+      http://{{ host }}:2379{{ "," if not loop.last else '' }}
     {%- endfor -%}"
   args:
     creates: /var/lib/rancher/k3s/server/node-token
