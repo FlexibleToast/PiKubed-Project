@@ -7,6 +7,14 @@
   include_tasks: setup-deb.yml
   when: ansible_distribution_file_variety == "Debian"
 
+- name: Install python packages
+  pip:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - kubernetes
+  - openshift
+
 - name: Start and enable firewalld
   service:
     name: firewalld

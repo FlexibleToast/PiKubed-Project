@@ -31,3 +31,8 @@
 
   - role: install-k3s-ha
     tags: k3s
+
+  - role: configure-kadalu
+    tags: kadalu
+    run_once: yes
+    delegate_to: "{{ groups['masters'][0] }}"

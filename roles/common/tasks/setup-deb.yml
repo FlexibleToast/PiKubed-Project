@@ -12,10 +12,14 @@
     name: ufw
     state: absent
 
-- name: Install firewalld
+- name: Install required pacakges
   apt:
-    name: firewalld
+    name: '{{ item }}'
     state: present
+  loop:
+  - firewalld
+  - python3-pip
+  - python-setuptools
 
 - name: Reboot hosts if updated
   reboot:

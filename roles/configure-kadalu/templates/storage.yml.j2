@@ -1,0 +1,17 @@
+{% for pool in kadalu %}
+---
+apiVersion: kadalu-operator.storage/v1alpha1
+kind: KadaluStorage
+metadata:
+  name: {{ pool.name }}
+spec:
+  type: {{ pool.type }}
+  storage:
+    {% for node in pool.nodes %}
+    {%- for device in node.devices -%}
+    - node: {{ node.name }}
+      device: {{ device }}
+    {% endfor -%}
+    {% endfor %}
+
+{% endfor -%}

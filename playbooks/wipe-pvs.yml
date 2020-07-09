@@ -1,6 +1,6 @@
 ---
 - hosts: pikubed_cluster
-  remote_user: '{{ ansible.username }}'
+  remote_user: '{{ root.username }}'
   become: yes
   vars_files:
   - vars.yml
@@ -14,5 +14,5 @@
       - if=/dev/zero
       - of={{ item }}
       - bs=1024
-      - count=1
+      - count=10
     loop: '{{ vg.drives }}'

@@ -1,0 +1,35 @@
+---
+# tasks file for roles/configure-kadalu
+- name: Start firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Open firewalld ports
+  firewalld:
+    port: '{{ item }}'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+  - 24007/tcp  # gluster service
+
+- name: Deploy from master-arm
+  k8s:
+    state: present
+    definition: "{{ lookup('url', 'https://raw.githubusercontent.com/kadalu/kadalu/buildx_test/manifests/kadalu-operator-master-arm.yaml', split_lines=False) }}"
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+
+- name: Storage template
+  template:
+    src: templates/storage.yml.j2
+    dest: /home/ubuntu/storage.yml
+    mode: 0664
+
+# - name: Deploy storage definition
+#   k8s:
+#     state: absent
+#     namespace: kadalu
+#     definition: "{{ lookup('template', 'templates/storage.yml.j2') }}"
+#     kubeconfig: /etc/rancher/k3s/k3s.yaml
