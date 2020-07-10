@@ -7,24 +7,15 @@
     autoremove: yes
   register: updated
 
-- name: Remove ufw
-  apt:
-    name: ufw
-    state: absent
-
 - name: Install required pacakges
   apt:
     name: '{{ item }}'
     state: present
   loop:
-  - firewalld
+  - ufw
   - python3-pip
   - python-setuptools
 
 - name: Reboot hosts if updated
   reboot:
   when: updated.changed
-
-- name: Expand rootfs of Raspbian
-  command: raspi-config --expand-rootfs
-  ignore_errors: yes

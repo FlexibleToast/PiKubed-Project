@@ -26,7 +26,7 @@
     when: ansible_host in groups['masters']
     rags: etcd
 
-  - role: k3s-firewalld
+  - role: k3s-ufw
     tags: k3s
 
   - role: install-k3s-ha
@@ -34,5 +34,3 @@
 
   - role: configure-kadalu
     tags: kadalu
-    run_once: yes
-    delegate_to: "{{ groups['masters'][0] }}"

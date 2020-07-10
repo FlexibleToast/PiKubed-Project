@@ -17,6 +17,8 @@ ExecStart=/usr/local/bin/etcd \
   --initial-cluster {% for host in groups['masters'] -%}
     {{ host }}=http://{{ host }}:2380{{ "," if not loop.last else '' }}
   {%- endfor %} \
+  --heartbeat-interval 1000 \
+  --election-timeout 5000 \
   --initial-cluster-state new
 Restart=always
 RestartSec=5s

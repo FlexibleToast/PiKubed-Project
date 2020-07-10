@@ -25,6 +25,7 @@
     - 'cgroup\_enable\=memory'
     - 'cgroup\_memory\=1'
   when: ansible_facts['distribution'] == 'Ubuntu'
+  ignore_errors: yes
 
 - name: Check if cgroups changed
   stat:

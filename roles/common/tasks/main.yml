@@ -15,11 +15,17 @@
   - kubernetes
   - openshift
 
-- name: Start and enable firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
+- name: Start ufw
+  ufw:
+    state: enabled
+
+- name: Open common ports
+  ufw:
+    port: '{{ item }}'
+    rule: allow
+    proto: tcp
+  loop:
+  - '22'
 
 - name: Change current runlevel
   command: systemctl isolate multi-user.target
