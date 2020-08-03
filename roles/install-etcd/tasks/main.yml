@@ -1,17 +1,17 @@
 ---
 # tasks file for roles/install-etcd
-- name: Start ufw
-  ufw:
-    state: enabled
-
-- name: Open etcd ports
-  ufw:
-    port: '{{ item }}'
-    rule: allow
-    proto: tcp
-  loop:
-  - '2379'  # etcd client
-  - '2380'  # etcd server
+# - name: Start ufw
+#   ufw:
+#     state: enabled
+#
+# - name: Open etcd ports
+#   ufw:
+#     port: '{{ item }}'
+#     rule: allow
+#     proto: tcp
+#   loop:
+#   - '2379'  # etcd client
+#   - '2380'  # etcd server
 
 - name: Install prerequirements (apt)
   include_tasks: etcd-deb.yml
@@ -68,6 +68,7 @@
     state: directory
     owner: etcd
     group: etcd
+    mode: '0700'
 
 - name: Create etcd service
   template:

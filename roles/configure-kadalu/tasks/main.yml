@@ -1,32 +1,32 @@
 ---
 # tasks file for roles/configure-kadalu
-- name: Start ufw
-  ufw:
-    state: enabled
-
-- name: Open kadalu ports
-  ufw:
-    port: '{{ item }}'
-    rule: allow
-    proto: tcp
-  loop:
-  - '24007' # gluster service
+# - name: Start ufw
+#   ufw:
+#     state: enabled
+#
+# - name: Open kadalu ports
+#   ufw:
+#     port: '{{ item }}'
+#     rule: allow
+#     proto: tcp
+#   loop:
+#   - '24007' # gluster service
 
 - name: Deploy from master-arm
   k8s:
     state: present
-    definition: "{{ lookup('url', 'https://raw.githubusercontent.com/kadalu/kadalu/buildx_test/manifests/kadalu-operator-master-arm.yaml', split_lines=False) }}"
+    definition: "{{ lookup('url', 'https://raw.githubusercontent.com/kadalu/kadalu/master/manifests/kadalu-operator-master-arm.yaml', split_lines=False) }}"
     kubeconfig: /etc/rancher/k3s/k3s.yaml
   run_once: yes
   delegate_to: "{{ groups['masters'][0] }}"
 
-- name: Storage template
-  template:
-    src: templates/storage.yml.j2
-    dest: /home/ubuntu/storage.yml
-    mode: 0664
-  run_once: yes
-  delegate_to: "{{ groups['masters'][0] }}"
+# - name: Storage template
+#   template:
+#     src: templates/storage.yml.j2
+#     dest: /home/ubuntu/storage.yml
+#     mode: 0664
+#   run_once: yes
+#   delegate_to: "{{ groups['masters'][0] }}"
 
 # - name: Deploy storage definition
 #   k8s:

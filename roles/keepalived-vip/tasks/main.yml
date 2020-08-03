@@ -38,5 +38,5 @@
 - name: start keepalived
   service:
     name: keepalived
-    enabled: true
+    enabled: yes
     state: started

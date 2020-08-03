@@ -15,17 +15,9 @@
   - kubernetes
   - openshift
 
-- name: Start ufw
+- name: Disable ufw
   ufw:
-    state: enabled
-
-- name: Open common ports
-  ufw:
-    port: '{{ item }}'
-    rule: allow
-    proto: tcp
-  loop:
-  - '22'
+    state: disabled
 
 - name: Change current runlevel
   command: systemctl isolate multi-user.target
